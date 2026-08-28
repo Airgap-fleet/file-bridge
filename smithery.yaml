@@ -1,0 +1,40 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+startCommand:
+  type: stdio
+configSchema:
+  type: object
+  required:
+    - root_path
+  properties:
+    root_path:
+      type: string
+      description: Root directory for file operations (required)
+    read_only:
+      type: boolean
+      default: false
+      description: Enable read-only mode (no write/delete operations)
+    api_key:
+      type: string
+      description: Optional API key for authentication (HTTP/SSE transports)
+      default: ""
+    log_level:
+      type: string
+      enum: ["DEBUG", "INFO", "WARNING", "ERROR"]
+      default: "INFO"
+      description: Logging level
+    allow_outside:
+      type: boolean
+      default: false
+      description: Allow operations outside root_path (dangerous)
+commandFunction: |
+  (config) => ({
+    "command": "python",
+    "args": ["-m", "filesystem_mcp.server"],
+    "env": {
+      "FILESYSTEM_ROOT_PATH": config.root_path,
+      "FILESYSTEM_READ_ONLY": String(config.read_only),
+      "FILESYSTEM_API_KEY": config.api_key,
+      "FILESYSTEM_LOG_LEVEL": config.log_level,
+      "FILESYSTEM_ALLOW_OUTSIDE": String(config.allow_outside)
+    }
+  })

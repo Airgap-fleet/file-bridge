@@ -1,0 +1,70 @@
+# docker-compose.yml — Local development stack for Filesystem MCP Server
+
+services:
+  filesystem-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: filesystem-mcp
+    environment:
+      - FILESYSTEM_MCP_ROOT_PATH=/sandbox
+      - FILESYSTEM_MCP_MAX_FILE_SIZE=10485760
+      - FILESYSTEM_MCP_FOLLOW_SYMLINKS=false
+      - FILESYSTEM_MCP_ALLOW_ABSOLUTE_PATHS=false
+      - FILESYSTEM_MCP_DEFAULT_ENCODING=utf-8
+    volumes:
+      # Mount local project as sandbox (read-only by default for safety)
+      - ./test-sandbox:/sandbox:ro
+      # For read-write access, use: ./test-sandbox:/sandbox:rw
+    healthcheck:
+      test: ["CMD", "python", "-c", "import filesystem_mcp; print('ok')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # Optional: Development container with source mounted for live reload
+  filesystem-mcp-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: filesystem-mcp-dev
+    environment:
+      - FILESYSTEM_MCP_ROOT_PATH=/sandbox
+      - FILESYSTEM_MCP_MAX_FILE_SIZE=10485760
+      - FILESYSTEM_MCP_FOLLOW_SYMLINKS=false
+      - FILESYSTEM_MCP_ALLOW_ABSOLUTE_PATHS=false
+      - FILESYSTEM_MCP_DEFAULT_ENCODING=utf-8
+    volumes:
+      - ./src:/app/src:ro
+      - ./test-sandbox:/sandbox:rw
+      - ./tests:/app/tests:ro
+      - ./pyproject.toml:/app/pyproject.toml:ro
+    working_dir: /app
+    command: python -m filesystem_mcp.server
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
+
+# Create a test sandbox directory with sample files
+# Run: docker-compose run --rm filesystem-mcp-dev python -c "
+# import tempfile
+# from pathlib import Path
+# sandbox = Path('/sandbox')
+# sandbox.mkdir(parents=True, exist_ok=True)
+# (sandbox / 'readme.md').write_text('# Test Sandbox\n\nSample content')
+# (sandbox / 'main.py').write_text('def main():\n    print(\"hello\")')
+# (sandbox / 'utils.py').write_text('def util():\n    pass')
+# import os; os.makedirs(sandbox / 'subdir', exist_ok=True)
+# (sandbox / 'subdir' / 'nested.txt').write_text('nested')
+# print('Sandbox created')
+# "
+
+volumes:
+  sandbox-data:
