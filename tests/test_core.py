@@ -94,14 +94,14 @@ class TestFilesystemCore:
             core.read_file(request)
         assert exc.value.code == "NOT_FOUND"
 
-    def test_read_file_not_a_file(self, core, temp_dir):
-        """Test reading a directory as a file."""
-        from filesystem_mcp.models import ReadFileRequest
+    def test_read_file_not_a_file(self, core, _temp_dir):
+            """Test reading a directory as a file."""
+            from filesystem_mcp.models import ReadFileRequest
 
-        request = ReadFileRequest(path=".")
-        with pytest.raises(FilesystemError) as exc:
-            core.read_file(request)
-        assert exc.value.code == "NOT_A_FILE"
+            request = ReadFileRequest(path=".")
+            with pytest.raises(FilesystemError) as exc:
+                core.read_file(request)
+            assert exc.value.code == "NOT_A_FILE"
 
     def test_read_file_size_limit(self, core, temp_dir):
         """Test file size limit on read."""
@@ -319,20 +319,22 @@ class TestFilesystemCore:
             core.patch_file(request)
         assert exc.value.code == "PATCH_FAILED"
 
-    def test_patch_file_size_limit(self, core, temp_dir):
-        """Test patch size limit."""
-        test_file = temp_dir / "test.txt"
-        test_file.write_text("x" * 500)
+    def test_patch_file_size_limit(self, _core, temp_dir):
+            """Test patch size limit."""
+            test_file = temp_dir / "test.txt"
+            test_file.write_text("x" * 500)
 
-        from filesystem_mcp.models import PatchFileRequest
+            from filesystem_mcp.models import PatchFileRequest
 
-        # Config has 1MB limit, but let's test with a config that has small limit
-        small_config = FilesystemConfig(root_path=temp_dir, max_file_size=1024)
-        small_core = FilesystemCore(small_config)
+            # Config has 1MB limit, but let's test with a config that has small limit
+            small_config = FilesystemConfig(root_path=temp_dir, max_file_size=1024)
+            small_core = FilesystemCore(small_config)
 
-        request = PatchFileRequest(path="test.txt", old_str="x", new_str="xx" * 600)  # Would exceed 1024
-        with pytest.raises(FileSizeError):
-            small_core.patch_file(request)
+            request = PatchFileRequest(
+            path="test.txt", old_str="x", new_str="xx" * 600
+        )  # Would exceed 1024
+            with pytest.raises(FileSizeError):
+                small_core.patch_file(request)
 
 
 class TestFilesystemCoreBinaryFiles:
@@ -430,17 +432,18 @@ class TestSecurityErrors:
             core.read_file(request)
 
     def test_absolute_path_blocked(self, core):
-        """Test absolute paths blocked by default."""
-        from filesystem_mcp.models import ReadFileRequest
+            """Test absolute paths blocked by default."""
+            # Use an absolute path - it will be blocked because allow_absolute_paths=False
+            import tempfile
 
-        # Use an absolute path - it will be blocked because allow_absolute_paths=False
-        import tempfile
-        outside_path = Path(tempfile.gettempdir()) / "outside_test.txt"
-        request = ReadFileRequest(path=str(outside_path))
-        with pytest.raises(SecurityError) as exc:
-            core.read_file(request)
-        assert "Absolute paths are not allowed" in exc.value.message
+            from filesystem_mcp.models import ReadFileRequest
+
+            outside_path = Path(tempfile.gettempdir()) / "outside_test.txt"
+            request = ReadFileRequest(path=str(outside_path))
+            with pytest.raises(SecurityError) as exc:
+                core.read_file(request)
+            assert "Absolute paths are not allowed" in exc.value.message
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    if __name__ == "__main__":
+        pytest.main([__file__, "-v"])

@@ -1,6 +1,8 @@
 """Test fixture to ensure DB connection."""
-import pytest
 from pathlib import Path
+
+import pytest
+
 
 @pytest.fixture(scope="session")
 def db_config():
