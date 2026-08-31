@@ -1,13 +1,6 @@
 """MCP tool schemas and exports."""
 
-import importlib
-
-try:
-    fastmcp = importlib.import_module("fastmcp")
-    FastMCP = fastmcp.FastMCP  # FastMCP 4.x
-except ImportError:
-    mcp_server_fastmcp = importlib.import_module("mcp.server.fastmcp")
-    FastMCP = mcp_server_fastmcp.FastMCP  # FastMCP 3.x
+from mcp.server.fastmcp import FastMCP
 
 app = FastMCP("FileSystem")
 

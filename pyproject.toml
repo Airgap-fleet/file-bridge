@@ -1,5 +1,5 @@
 [project]
-name = "filesystem-mcp"
+name = "file-bridge"
 version = "1.0.1"
 description = "Bridge your AI assistant to local files — read, write, search, and manage files securely without cloud dependencies"
 readme = "README.md"
@@ -16,7 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "fastmcp>=3.4",
+    "fastmcp>=3.4,<4.0",
     "pydantic>=2.10",
     "pydantic-settings>=2.6",
     "structlog>=25.1",
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-filesystem-mcp = "filesystem_mcp.server:main"
+file-bridge = "filesystem_mcp.server:main"
 
 [project.optional-dependencies]
 dev = [
