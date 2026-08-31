@@ -1,8 +1,9 @@
 """MCP tool schemas and exports."""
 
-from typing import Union
-
-from mcp.server.fastmcp import FastMCP
+try:
+    from fastmcp import FastMCP  # FastMCP 4.x
+except ImportError:
+    from mcp.server.fastmcp import FastMCP  # FastMCP 3.x
 
 app = FastMCP("FileSystem")
 
