@@ -65,44 +65,46 @@ class FilesystemCore:
         log.info("filesystem_core_initialized", root_path=str(self.config.root_path))
 
     def _resolve_path(self, path: str) -> Path:
-        """Resolve a user-provided path to an absolute path within the root."""
-        # Handle absolute paths
-        if Path(path).is_absolute():
-            if not self.config.allow_absolute_paths:
-                raise SecurityError(
-                    "Absolute paths are not allowed (allow_absolute_paths=False)",
-                    details={"path": path},
-                )
-            resolved = Path(path).resolve()
-        else:
-            # Relative to root
-            resolved = (self.config.root_path / path).resolve()
-
-        # Security: ensure the resolved path is within root
-        try:
-            resolved.relative_to(self.config.root_path)
-        except ValueError as e:
-            raise SecurityError(
-                f"Path '{path}' resolves outside the configured root directory",
-                details={
-                    "requested_path": path,
-                    "resolved_path": str(resolved),
-                    "root_path": str(self.config.root_path),
-                },
-            ) from e
-
-        # Security: symlink protection
-        if not self.config.follow_symlinks:
-            # Check if any part of the path is a symlink
-            for part in resolved.parts:
-                check_path = Path(*resolved.parts[: resolved.parts.index(part) + 1])
-                if check_path.is_symlink():
+            """Resolve a user-provided path to an absolute path within the root."""
+            # Handle absolute paths
+            if Path(path).is_absolute():
+                if not self.config.allow_absolute_paths:
                     raise SecurityError(
-                        "Symlinks are not allowed (follow_symlinks=False)",
-                        details={"path": str(check_path)},
+                        "Absolute paths are not allowed (allow_absolute_paths=False)",
+                        details={"path": path},
                     )
+                resolved = Path(path).resolve()
+            else:
+                # Relative to root
+                resolved = (self.config.root_path / path).resolve()
 
-        return resolved
+            # Security: ensure the resolved path is within root
+            try:
+                resolved.relative_to(self.config.root_path)
+            except ValueError as e:
+                raise SecurityError(
+                    f"Path '{path}' resolves outside the configured root directory",
+                    details={
+                        "requested_path": path,
+                        "resolved_path": str(resolved),
+                        "root_path": str(self.config.root_path),
+                    },
+                ) from e
+
+            # Security: symlink protection - check original path components BEFORE resolving
+            if not self.config.follow_symlinks:
+                # Build path incrementally from root and check each component for symlinks
+                # Use the original relative path, not the resolved one
+                check_path = self.config.root_path
+                for part in Path(path).parts:
+                    check_path = check_path / part
+                    if check_path.is_symlink():
+                        raise SecurityError(
+                            "Symlinks are not allowed (follow_symlinks=False)",
+                            details={"path": str(check_path)},
+                        )
+
+            return resolved
 
     def _check_file_size(self, path: Path, max_size: int | None = None) -> None:
         """Check if file size is within limits."""
