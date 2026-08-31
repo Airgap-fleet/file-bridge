@@ -37,7 +37,6 @@ dev = [
     "types-structlog>=25.1",
     "types-pyyaml>=6.0",
     "types-requests>=2.32",
-    "types-pydantic>=2.10",
 ]
 
 [build-system]
