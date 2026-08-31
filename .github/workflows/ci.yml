@@ -63,7 +63,7 @@ jobs:
 
       - name: Run mypy
         run: |
-          mypy src/filesystem_mcp --strict
+          mypy --config-file mypy.ini --strict
 
   build:
     runs-on: ubuntu-latest
