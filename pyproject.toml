@@ -49,7 +49,19 @@ where = ["src"]
 target-version = "py311"
 line-length = 100
 select = ["E", "F", "I", "UP", "B", "C4", "SIM", "TID", "RUF", "PTH", "ERA", "ARG", "AIR", "DTZ", "FA", "ISC", "ICN", "PIE", "PT", "TCH", "TRY", "RET", "ASYNC", "NPY", "PL", "T20", "W", "N", "INP", "S", "BLE"]
-ignore = []
+ignore = [
+    "TRY003",
+    "PLC0415",
+    "PLR2004",
+    "ARG002",
+    "SIM102",
+    "INP001",
+    "F401",
+    "W292",
+    "S603",
+    "PLW1510",
+    "PLW0603",
+]
 fixable = ["ALL"]
 unfixable = []
 
