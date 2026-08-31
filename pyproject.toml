@@ -34,7 +34,6 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.10",
     "uv>=0.5",
-    "types-structlog>=25.1",
     "types-pyyaml>=6.0",
     "types-requests>=2.32",
 ]
