@@ -74,7 +74,7 @@ class TestMCPServerIntegration:
         server_module.reset_core = original_reset_core
 
     @pytest.mark.asyncio
-    async def test_read_file_tool(self, _core, temp_dir):
+    async def test_read_file_tool(self, core, temp_dir):
         """Test read_file MCP tool."""
         test_file = temp_dir / "integration_read.txt"
         test_file.write_text("Integration test content")
@@ -87,7 +87,7 @@ class TestMCPServerIntegration:
         assert response.is_binary is False
 
     @pytest.mark.asyncio
-    async def test_write_file_tool(self, _core, temp_dir):
+    async def test_write_file_tool(self, core, temp_dir):
         """Test write_file MCP tool."""
         response = await write_file(
             WriteFileRequest(path="integration_write.txt", content="Written via MCP")
@@ -100,7 +100,7 @@ class TestMCPServerIntegration:
         assert (temp_dir / "integration_write.txt").read_text() == "Written via MCP"
 
     @pytest.mark.asyncio
-    async def test_list_dir_tool(self, _core, temp_dir):
+    async def test_list_dir_tool(self, core, temp_dir):
         """Test list_dir MCP tool."""
         (temp_dir / "file1.txt").write_text("a")
         (temp_dir / "file2.py").write_text("b")
@@ -116,7 +116,7 @@ class TestMCPServerIntegration:
         assert "subdir" in names
 
     @pytest.mark.asyncio
-    async def test_glob_tool(self, _core, temp_dir):
+    async def test_glob_tool(self, core, temp_dir):
         """Test glob MCP tool."""
         (temp_dir / "test.py").write_text("a")
         (temp_dir / "test.txt").write_text("b")
@@ -133,7 +133,7 @@ class TestMCPServerIntegration:
         assert any(m.replace("\\", "/") == "subdir/test.py" for m in matches)
 
     @pytest.mark.asyncio
-    async def test_patch_file_tool(self, _core, temp_dir):
+    async def test_patch_file_tool(self, core, temp_dir):
         """Test patch_file MCP tool."""
         test_file = temp_dir / "integration_patch.txt"
         test_file.write_text("Hello world\nHello again")
@@ -149,7 +149,7 @@ class TestMCPServerIntegration:
         assert content == "Hi world\nHi again"
 
     @pytest.mark.asyncio
-    async def test_full_workflow(self, _core, _temp_dir):
+    async def test_full_workflow(self, core, temp_dir):
         """Test a complete workflow: write, read, list, glob, patch."""
         # Write multiple files
         await write_file(

@@ -94,7 +94,7 @@ class TestFilesystemCore:
             core.read_file(request)
         assert exc.value.code == "NOT_FOUND"
 
-    def test_read_file_not_a_file(self, core, _temp_dir):
+    def test_read_file_not_a_file(self, core, temp_dir):
             """Test reading a directory as a file."""
             from filesystem_mcp.models import ReadFileRequest
 
@@ -319,7 +319,7 @@ class TestFilesystemCore:
             core.patch_file(request)
         assert exc.value.code == "PATCH_FAILED"
 
-    def test_patch_file_size_limit(self, _core, temp_dir):
+    def test_patch_file_size_limit(self, core, temp_dir):
             """Test patch size limit."""
             test_file = temp_dir / "test.txt"
             test_file.write_text("x" * 500)
@@ -331,8 +331,8 @@ class TestFilesystemCore:
             small_core = FilesystemCore(small_config)
 
             request = PatchFileRequest(
-            path="test.txt", old_str="x", new_str="xx" * 600
-        )  # Would exceed 1024
+                path="test.txt", old_str="x", new_str="xx" * 600
+            )  # Would exceed 1024
             with pytest.raises(FileSizeError):
                 small_core.patch_file(request)
 
