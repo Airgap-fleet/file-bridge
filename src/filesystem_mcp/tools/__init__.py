@@ -1,9 +1,14 @@
 """MCP tool schemas and exports."""
 
-try:
-    from fastmcp import FastMCP  # FastMCP 4.x
-except ImportError:
-    from mcp.server.fastmcp import FastMCP  # FastMCP 3.x
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
+else:
+    try:
+        from fastmcp import FastMCP  # FastMCP 4.x
+    except ImportError:
+        from mcp.server.fastmcp import FastMCP  # FastMCP 3.x
 
 app = FastMCP("FileSystem")
 
