@@ -48,7 +48,7 @@ where = ["src"]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-select = ["E", "F", "I", "UP", "B", "C4", "SIM", "TID", "RUF", "PTH", "ERA", "ARG", "AIR", "DTZ", "FA", "ISC", "ICN", "PIE", "PT", "TCH", "TRY", "UN", "RET", "ASYNC", "NPY", "PL", "T20", "W", "N", "INP", "S", "BLE"]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM", "TID", "RUF", "PTH", "ERA", "ARG", "AIR", "DTZ", "FA", "ISC", "ICN", "PIE", "PT", "TCH", "TRY", "RET", "ASYNC", "NPY", "PL", "T20", "W", "N", "INP", "S", "BLE"]
 ignore = []
 fixable = ["ALL"]
 unfixable = []
