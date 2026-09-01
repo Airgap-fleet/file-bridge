@@ -15,7 +15,6 @@ from filesystem_mcp.models import (
     WriteFileRequest,
 )
 from filesystem_mcp.server import (
-    create_core,
     glob,
     list_dir,
     patch_file,
