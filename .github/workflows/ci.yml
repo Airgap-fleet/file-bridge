@@ -89,7 +89,7 @@ jobs:
       - name: Verify package
         run: |
           pip install dist/*.whl
-          file-bridge --help
+          airgap-file-bridge --help
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
