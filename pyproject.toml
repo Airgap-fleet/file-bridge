@@ -1,6 +1,6 @@
 [project]
-name = "file-bridge"
-version = "1.0.1"
+name = "airgap-file-bridge"
+version = "1.0.2"
 description = "Bridge your AI assistant to local files — read, write, search, and manage files securely without cloud dependencies"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-file-bridge = "filesystem_mcp.server:main"
+airgap-file-bridge = "filesystem_mcp.server:main"
 
 [project.optional-dependencies]
 dev = [
