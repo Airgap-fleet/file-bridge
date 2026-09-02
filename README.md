@@ -5,20 +5,20 @@ Bridge your AI assistant to local files — read, write, search, and manage file
 ## Quick Start (uvx — no install needed)
 
 ```bash
-uvx file-bridge /path/to/your/files
+uvx airgap-file-bridge /path/to/your/files
 ```
 
 ## Installation
 
 ```bash
-pip install file-bridge
+pip install airgap-file-bridge
 ```
 
 ## Usage
 
 ### CLI (Direct)
 ```bash
-file-bridge
+airgap-file-bridge
 ```
 
 ### MCP Client Config (Claude Desktop, Cursor, VS Code)
@@ -26,7 +26,7 @@ file-bridge
 {
   "mcpServers": {
     "files": {
-      "command": "file-bridge",
+      "command": "airgap-file-bridge",
       "env": {
         "FILE_BRIDGE_ROOT_PATH": "C:/path/to/files"
       }
@@ -36,7 +36,7 @@ file-bridge
 ```
 
 ### DXT (Claude Desktop 1-Click)
-Download `file-bridge-1.0.1.dxt` from [Releases](https://github.com/airgap-fleet/file-bridge/releases) → drag into Claude Desktop.
+Download `airgap-file-bridge-1.0.2.dxt` from [Releases](https://github.com/airgap-fleet/file-bridge/releases) → drag into Claude Desktop.
 
 ## Configuration
 
