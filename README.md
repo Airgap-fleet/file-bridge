@@ -22,13 +22,29 @@ airgap-file-bridge
 ```
 
 ### MCP Client Config (Claude Desktop, Cursor, VS Code)
+
+**Windows (requires full path to executable):**
+```json
+{
+  "mcpServers": {
+    "files": {
+      "command": "C:\Users\<user>\AppData\Local\hermes\hermes-agent\venv\Scripts\airgap-file-bridge.exe",
+      "env": {
+        "FILESYSTEM_MCP_ROOT_PATH": "C:/path/to/files"
+      }
+    }
+  }
+}
+```
+
+**macOS/Linux (if on PATH):**
 ```json
 {
   "mcpServers": {
     "files": {
       "command": "airgap-file-bridge",
       "env": {
-        "FILE_BRIDGE_ROOT_PATH": "C:/path/to/files"
+        "FILESYSTEM_MCP_ROOT_PATH": "/path/to/files"
       }
     }
   }
@@ -42,7 +58,7 @@ Download `airgap-file-bridge-1.0.2.dxt` from [Releases](https://github.com/airga
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
-| `FILE_BRIDGE_ROOT_PATH` | Current directory | Root directory for file operations |
+| `FILESYSTEM_MCP_ROOT_PATH` | Current directory | Root directory for file operations |
 | `FILE_BRIDGE_MAX_FILE_SIZE` | 10MB | Max file size for operations |
 | `FILE_BRIDGE_FOLLOW_SYMLINKS` | false | Follow symlinks |
 | `FILE_BRIDGE_ALLOW_ABSOLUTE_PATHS` | false | Allow absolute paths outside root |
@@ -66,6 +82,13 @@ Download `airgap-file-bridge-1.0.2.dxt` from [Releases](https://github.com/airga
 - **http** — Streamable HTTP for modern clients
 
 Set via `FILE_BRIDGE_TRANSPORT` environment variable.
+
+## Windows-Specific Notes
+
+- The executable is installed to `C:\Users\<user>\AppData\Local\hermes\hermes-agent\venv\Scripts\airgap-file-bridge.exe` when using Hermes
+- **Always use the full `.exe` path in MCP client configs on Windows** — bare commands like `airgap-file-bridge` will fail with `ENOENT` because the venv Scripts folder is not on system PATH
+- Use forward slashes in environment variable values (`C:/path/to/files`) — they work fine in JSON
+- Escape backslashes in JSON command paths (`C:\Users\...`)
 
 ## Why File Bridge?
 
