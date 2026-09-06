@@ -1,44 +1,68 @@
 # File Bridge
 
-Bridge your AI assistant to local files — read, write, search, and manage files securely without cloud dependencies.
+Bridge your AI assistant to local files - read, write, search, and manage files securely without cloud dependencies.
 
-## Quick Start (uvx — no install needed)
+**Build status:** UNSIGNED INTERNAL (no Authenticode certificate on this machine yet). See `proof-pack/SIGNING.md`.
 
-```bash
-uvx airgap-file-bridge /path/to/your/files
+Client / COLP install guide (plain English): `CLIENT-README.md`.
+
+## Quick start (Windows - recommended)
+
+One-command installer (setup may use the internet once; the running bridge stays air-gapped):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\installer\Install-FileBridge.ps1 -RootPath "C:\Path\To\Your\Files"
 ```
 
-## Installation
+Post-install smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\self_test.ps1 -RootPath "C:\Path\To\Your\Files"
+```
+
+Details: `installer/README.md`. Zero-egress proof: `proof-pack/`.
+
+Uninstall:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\installer\Uninstall-FileBridge.ps1
+```
+
+## Advanced / developer install
+
+### uvx (no persistent install)
+
+```bash
+uvx airgap-file-bridge
+```
+
+### pip
 
 ```bash
 pip install airgap-file-bridge
-```
-
-## Usage
-
-### CLI (Direct)
-```bash
 airgap-file-bridge
 ```
 
 ### MCP Client Config (Claude Desktop, Cursor, VS Code)
 
+Prefer the Windows installer above when possible (it writes a local launcher). Manual example:
+
 **Windows (requires full path to executable):**
-```json
+`json
 {
   "mcpServers": {
     "files": {
-      "command": "C:\Users\<user>\AppData\Local\hermes\hermes-agent\venv\Scripts\airgap-file-bridge.exe",
+      "command": "C:\\Users\\<user>\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\airgap-file-bridge.exe",
       "env": {
         "FILESYSTEM_MCP_ROOT_PATH": "C:/path/to/files"
       }
     }
   }
 }
-```
+`
 
 **macOS/Linux (if on PATH):**
-```json
+`json
 {
   "mcpServers": {
     "files": {
@@ -49,12 +73,18 @@ airgap-file-bridge
     }
   }
 }
-```
+`
 
 ### DXT (Claude Desktop 1-Click)
-Download `airgap-file-bridge-1.0.2.dxt` from [Releases](https://github.com/airgap-fleet/file-bridge/releases) → drag into Claude Desktop.
+
+Download the .dxt from Releases and drag into Claude Desktop (when publishing a signed release).
+
+Download the `.dxt` from Releases and drag into Claude Desktop (when publishing a signed release).
 
 ## Configuration
+
+Canonical environment prefix: **`FILE_BRIDGE_*`**.  
+Legacy **`FILESYSTEM_MCP_*`** is still accepted when the matching `FILE_BRIDGE_*` value is unset (see `AUDIT-NOTES.md`).
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
@@ -77,11 +107,11 @@ Download `airgap-file-bridge-1.0.2.dxt` from [Releases](https://github.com/airga
 
 ## Transport Modes
 
-- **stdio** (default) — For local MCP clients (Claude Desktop, etc.)
-- **sse** — Server-Sent Events for HTTP clients
-- **http** — Streamable HTTP for modern clients
+- **stdio** (default) - For local MCP clients (Claude Desktop, etc.)
+- **sse** - Server-Sent Events for HTTP clients
+- **http** - Streamable HTTP for modern clients
 
-Set via `FILE_BRIDGE_TRANSPORT` environment variable.
+Set via `FILE_BRIDGE_TRANSPORT` environment variable. Air-gap demos must use **stdio**.
 
 ## Windows-Specific Notes
 
@@ -92,12 +122,11 @@ Set via `FILE_BRIDGE_TRANSPORT` environment variable.
 
 ## Why File Bridge?
 
-- **Local-first** — Your files never leave your machine
-- **Air-gapped ready** — No cloud dependencies, works offline
-- **Security hardened** — Path traversal protection, size limits, symlink control, binary detection
-- **Multiple transports** — stdio, SSE, Streamable HTTP
-- **Ripgrep powered** — Fast regex search with context
-- **uvx compatible** — Zero-install usage like the competition
+- **Local-first** - Your files never leave your machine
+- **Air-gapped ready** - No cloud dependencies, works offline
+- **Security hardened** - Path traversal protection, size limits, symlink control, binary detection
+- **Multiple transports** - stdio, SSE, Streamable HTTP
+- **Ripgrep powered** - Fast regex search with context
 
 ## Development
 
