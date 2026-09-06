@@ -1,40 +1,93 @@
-# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+# Smithery configuration for airgap-file-bridge
+# See https://smithery.ai/docs/build for full schema
+
+name: airgap-file-bridge
+description: Local-first filesystem MCP bridge - secure, air-gapped, UK-sovereign
+version: 1.0.4
+license: MIT
+
+# Command to start the server
 startCommand:
   type: stdio
+  command: airgap-file-bridge
+  args: []
+
+# Environment variables (user configurable)
 configSchema:
   type: object
-  required:
-    - root_path
   properties:
-    root_path:
+    FILE_BRIDGE_ROOT_PATH:
       type: string
-      description: Root directory for file operations (required)
-    read_only:
+      title: Root Path
+      description: Root directory for file operations (absolute path)
+      required: true
+    FILE_BRIDGE_MAX_FILE_SIZE:
+      type: integer
+      title: Max File Size (bytes)
+      description: Maximum file size for read/write operations
+      default: 10485760
+    FILE_BRIDGE_FOLLOW_SYMLINKS:
       type: boolean
+      title: Follow Symlinks
       default: false
-      description: Enable read-only mode (no write/delete operations)
-    api_key:
-      type: string
-      description: Optional API key for authentication (HTTP/SSE transports)
-      default: ""
-    log_level:
-      type: string
-      enum: ["DEBUG", "INFO", "WARNING", "ERROR"]
-      default: "INFO"
-      description: Logging level
-    allow_outside:
+    FILE_BRIDGE_ALLOW_ABSOLUTE_PATHS:
       type: boolean
+      title: Allow Absolute Paths
       default: false
-      description: Allow operations outside root_path (dangerous)
-commandFunction: |
-  (config) => ({
-    "command": "python",
-    "args": ["-m", "filesystem_mcp.server"],
-    "env": {
-      "FILESYSTEM_ROOT_PATH": config.root_path,
-      "FILESYSTEM_READ_ONLY": String(config.read_only),
-      "FILESYSTEM_API_KEY": config.api_key,
-      "FILESYSTEM_LOG_LEVEL": config.log_level,
-      "FILESYSTEM_ALLOW_OUTSIDE": String(config.allow_outside)
-    }
-  })
+    FILE_BRIDGE_DEFAULT_ENCODING:
+      type: string
+      title: Default Encoding
+      default: utf-8
+    FILE_BRIDGE_LOG_LEVEL:
+      type: string
+      title: Log Level
+      enum: [DEBUG, INFO, WARNING, ERROR]
+      default: INFO
+    FILE_BRIDGE_TRANSPORT:
+      type: string
+      title: Transport
+      enum: [stdio, sse, http]
+      default: stdio
+    FILE_BRIDGE_HOST:
+      type: string
+      title: Host
+      default: 127.0.0.1
+    FILE_BRIDGE_PORT:
+      type: integer
+      title: Port
+      default: 8422
+    FILE_BRIDGE_WATCHDOG_POLLING:
+      type: boolean
+      title: Watchdog Polling
+      default: false
+
+# Metadata for Smithery
+repository:
+  url: https://github.com/Airgap-fleet/file-bridge
+  source: github
+
+# Keywords for discoverability
+keywords:
+  - mcp
+  - model-context-protocol
+  - mcp-server
+  - local-first
+  - air-gapped
+  - filesystem
+  - files
+  - uk-sovereign
+
+# License
+license: MIT
+
+# Homepage
+homepage: https://pypi.org/project/airgap-file-bridge/
+
+# Repository
+repository: https://github.com/Airgap-fleet/file-bridge
+
+# Issues
+issues: https://github.com/Airgap-fleet/file-bridge/issues
+
+# Changelog
+changelog: https://github.com/Airgap-fleet/file-bridge/releases

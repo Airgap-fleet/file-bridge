@@ -1,5 +1,8 @@
 """Filesystem MCP Server — FastMCP application with registered tools."""
 
+import logging
+import sys
+
 import structlog
 from fastmcp import FastMCP
 
@@ -127,24 +130,38 @@ async def patch_file(request: PatchFileRequest) -> PatchFileResponse:
     return get_core().patch_file(request)
 
 
-def main() -> None:
-    """Entry point for the MCP server."""
-
-    # Configure structlog for JSON output to stderr
+def configure_logging(level: int = logging.INFO) -> None:
+    """Send all structured logs to stderr so stdio JSON-RPC stays clean."""
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stderr,
+        level=level,
+        force=True,
+    )
     structlog.configure(
         processors=[
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
             structlog.processors.JSONRenderer(),
         ],
-        wrapper_class=structlog.make_filtering_bound_logger(20),  # INFO level
+        wrapper_class=structlog.make_filtering_bound_logger(level),
+        logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
+        cache_logger_on_first_use=True,
     )
 
-    log.info("starting_filesystem_mcp", version="0.1.0", root_path=str(get_core().config.root_path))
+
+def main() -> None:
+    """Entry point for the MCP server."""
+    configure_logging(logging.INFO)
+
+    log.info(
+        "starting_file_bridge",
+        version="1.0.4",
+        root_path=str(get_core().config.root_path),
+    )
 
     # Run the FastMCP server (stdio transport by default)
     mcp.run()
-
 
 if __name__ == "__main__":
     main()
