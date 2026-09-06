@@ -1,5 +1,6 @@
 """Pydantic models for Filesystem MCP Server tools."""
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -7,15 +8,39 @@ from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _apply_legacy_env_prefix() -> None:
+    """Map legacy FILESYSTEM_MCP_* env vars onto FILE_BRIDGE_* when unset.
+
+    Older installs and .env files used FILESYSTEM_MCP_*. Canonical prefix is
+    FILE_BRIDGE_* (product rename). Existing values are not overwritten.
+    """
+    legacy = "FILESYSTEM_MCP_"
+    canonical = "FILE_BRIDGE_"
+    for key, value in list(os.environ.items()):
+        if not key.startswith(legacy):
+            continue
+        new_key = canonical + key[len(legacy) :]
+        if new_key not in os.environ:
+            os.environ[new_key] = value
+
+
+_apply_legacy_env_prefix()
+
 class FilesystemConfig(BaseSettings):
     """Configuration for the Filesystem MCP Server."""
 
     model_config = SettingsConfigDict(
-        env_prefix="FILESYSTEM_MCP_",
+        env_prefix="FILE_BRIDGE_",
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    def __init__(self, **data: Any) -> None:
+        """Apply legacy env aliases, then load settings."""
+        _apply_legacy_env_prefix()
+        super().__init__(**data)
+
 
     root_path: Path = Field(
         default=Path.cwd(),

@@ -51,11 +51,11 @@ class TestFilesystemConfig:
 
     def test_env_override(self, monkeypatch):
         """Test environment variable override."""
-        monkeypatch.setenv("FILESYSTEM_MCP_ROOT_PATH", "/custom/root")
-        monkeypatch.setenv("FILESYSTEM_MCP_MAX_FILE_SIZE", "2048")
-        monkeypatch.setenv("FILESYSTEM_MCP_FOLLOW_SYMLINKS", "true")
-        monkeypatch.setenv("FILESYSTEM_MCP_ALLOW_ABSOLUTE_PATHS", "true")
-        monkeypatch.setenv("FILESYSTEM_MCP_DEFAULT_ENCODING", "latin-1")
+        monkeypatch.setenv("FILE_BRIDGE_ROOT_PATH", "/custom/root")
+        monkeypatch.setenv("FILE_BRIDGE_MAX_FILE_SIZE", "2048")
+        monkeypatch.setenv("FILE_BRIDGE_FOLLOW_SYMLINKS", "true")
+        monkeypatch.setenv("FILE_BRIDGE_ALLOW_ABSOLUTE_PATHS", "true")
+        monkeypatch.setenv("FILE_BRIDGE_DEFAULT_ENCODING", "latin-1")
 
         config = FilesystemConfig()
         assert config.root_path == Path("/custom/root").resolve()
@@ -63,3 +63,23 @@ class TestFilesystemConfig:
         assert config.follow_symlinks is True
         assert config.allow_absolute_paths is True
         assert config.default_encoding == "latin-1"
+
+    def test_legacy_env_prefix(self, monkeypatch):
+        """Legacy FILESYSTEM_MCP_* still works when FILE_BRIDGE_* unset."""
+        for key in list(__import__("os").environ):
+            if key.startswith(("FILE_BRIDGE_", "FILESYSTEM_MCP_")):
+                monkeypatch.delenv(key, raising=False)
+        monkeypatch.setenv("FILESYSTEM_MCP_ROOT_PATH", "/legacy/root")
+        monkeypatch.setenv("FILESYSTEM_MCP_MAX_FILE_SIZE", "4096")
+
+        config = FilesystemConfig()
+        assert config.root_path == Path("/legacy/root").resolve()
+        assert config.max_file_size == 4096
+
+    def test_canonical_env_wins_over_legacy(self, monkeypatch):
+        """FILE_BRIDGE_* takes precedence over FILESYSTEM_MCP_*."""
+        monkeypatch.setenv("FILESYSTEM_MCP_ROOT_PATH", "/legacy/root")
+        monkeypatch.setenv("FILE_BRIDGE_ROOT_PATH", "/canonical/root")
+
+        config = FilesystemConfig()
+        assert config.root_path == Path("/canonical/root").resolve()

@@ -1,0 +1,5 @@
+product=file-bridge
+version=1.0.4
+git_commit=d36427f1273c04bf17b71c5bdb1cf90db939d55b
+built_utc=2026-09-06T16:55:01.5265806Z
+signing=UNSIGNED INTERNAL
