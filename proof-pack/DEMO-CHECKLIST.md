@@ -1,4 +1,6 @@
-# Zero-egress live demo checklist (run twice)
+﻿# Zero-egress live demo checklist (run twice)
+
+**Audience:** COLP / practice manager / firm IT. Run this live demo twice. It shows the **File Bridge** process does not open vendor outbound connections during local work. This is evidence for your controls, not a certification.
 
 **Goal:** On a visible network monitor, run a realistic file query through File Bridge and show **zero outbound connections from the bridge process**. Recordable as a short screen capture; must be live-repeatable.
 

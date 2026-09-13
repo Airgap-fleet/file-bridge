@@ -1,4 +1,4 @@
-# File Bridge - Client guide
+﻿# File Bridge - Client guide
 
 **For:** COLP, practice manager, and firm IT evaluating or installing File Bridge  
 **Product:** File Bridge (Airgap Fleet) - a local connector your AI desk uses to work with files and folders on this PC  
@@ -14,6 +14,10 @@ This guide is plain English. Technical detail for developers lives in `README.md
 File Bridge lets your AI desk (for example Claude Desktop or Cursor) **read, write, search, and manage files inside a folder you choose on your own computer** - privately.
 
 In client terms: ask your AI assistant to work with documents, matter packs, or shared folders on this PC, without sending those files to a File Bridge vendor cloud. The bridge is a small local program that only talks to the AI desk on the same machine. It stays inside the root folder you configure (path traversal is blocked by design).
+
+**Why firms use this**
+
+Staff sometimes paste client matter into consumer ChatGPT or similar tools. Private Desk installs File Bridge on the firm PC so the **bridge itself** does not send file content to a File Bridge vendor cloud. Your AI desk (Claude Desktop, Cursor, and similar) is a **separate product** with its own network rules — choose and configure that carefully for your firm. Access stays inside the root folder you configure.
 
 **Who it is for**
 
@@ -46,6 +50,14 @@ We do **not** claim ISO 27001, SOC 2, Cyber Essentials, Lexcel, or similar certi
 **Sales / IT evaluation:** for a live, repeatable "nothing leaves" demo, follow `proof-pack\DEMO-CHECKLIST.md` (run twice; Resource Monitor or `proof-pack\Observe-Egress.ps1`).
 
 ---
+
+**What we never claim**
+
+- We do **not** claim ISO 27001, SOC 2, Cyber Essentials, Lexcel, NCSC approval, or similar certifications for this product.
+- This build is **UNSIGNED INTERNAL** — it is not Authenticode-signed and must not be presented as a signed release.
+- The proof pack is **evidence for your auditor and firm controls**, not a certificate or accreditation mark.
+- We do **not** certify the network behaviour of Claude Desktop, Cursor, or other AI desks.
+- Setup may use the internet **once** for prerequisites; day-to-day bridge use does not phone home with matter content.
 
 ## 3. System requirements
 
