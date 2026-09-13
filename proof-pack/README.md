@@ -1,6 +1,8 @@
-# File Bridge - zero-egress proof pack
+﻿# File Bridge - zero-egress proof pack
 
-**Audience:** COLP / practice manager / firm IT evaluating Airgap Fleet.  
+**Audience:** COLP / practice manager / firm IT evaluating Airgap Fleet.  
+
+**For COLP / practice manager / firm IT:** use this pack to run a live, repeatable demo that the **bridge process** does not open vendor outbound connections while handling local work. It is evidence for your controls — **not** a certification mark.
 **Product:** File Bridge (local file connector for your AI desk)  
 **Build status:** **UNSIGNED INTERNAL** - Authenticode certificate not yet applied. Do not treat this as a prospect-ready signed release.
 
