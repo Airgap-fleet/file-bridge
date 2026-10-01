@@ -26,7 +26,7 @@ def temp_dir():
 @pytest.fixture
 def config(temp_dir):
     """Create a test configuration."""
-    return FilesystemConfig(root_path=temp_dir, max_file_size=1024 * 1024)  # 1 MB
+    return FilesystemConfig(root_path=temp_dir, max_file_size=1024 * 1024, read_only=False)  # 1 MB
 
 
 @pytest.fixture
@@ -138,7 +138,9 @@ class TestFilesystemCore:
         from filesystem_mcp.models import WriteFileRequest
 
         # Create a core with small limit for this test (minimum 1024)
-        small_config = FilesystemConfig(root_path=core.config.root_path, max_file_size=1024)
+        small_config = FilesystemConfig(
+            root_path=core.config.root_path, max_file_size=1024, read_only=False
+        )
         small_core = FilesystemCore(small_config)
 
         request = WriteFileRequest(path="large.txt", content="x" * 2000)
@@ -279,7 +281,9 @@ class TestFilesystemCore:
 
         from filesystem_mcp.models import PatchFileRequest
 
-        request = PatchFileRequest(path="test.txt", old_str="World", new_str="Universe")
+        request = PatchFileRequest(
+            path="test.txt", old_str="World", new_str="Universe", expected_replacements=None
+        )
         response = core.patch_file(request)
 
         assert response.replacements == 2
@@ -326,11 +330,11 @@ class TestFilesystemCore:
             from filesystem_mcp.models import PatchFileRequest
 
             # Config has 1MB limit, but let's test with a config that has small limit
-            small_config = FilesystemConfig(root_path=temp_dir, max_file_size=1024)
+            small_config = FilesystemConfig(root_path=temp_dir, max_file_size=1024, read_only=False)
             small_core = FilesystemCore(small_config)
 
             request = PatchFileRequest(
-                path="test.txt", old_str="x", new_str="xx" * 600
+                path="test.txt", old_str="x", new_str="xx" * 600, expected_replacements=None
             )  # Would exceed 1024
             with pytest.raises(FileSizeError):
                 small_core.patch_file(request)

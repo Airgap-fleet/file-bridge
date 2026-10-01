@@ -49,3 +49,7 @@ Running installs that followed README (`FILE_BRIDGE_ROOT_PATH`) were **silently 
 - Root `server.py` legacy stub (different tool surface) - packaged entry remains `airgap-file-bridge` -> `filesystem_mcp.server:main`.
 - FastMCP banner / third-party library stdout (self-test sets `FASTMCP_SHOW_SERVER_BANNER=false`).
 - Authenticode signing (still UNSIGNED INTERNAL).
+
+## 2026-10-02 review (release 1.1.0)
+
+A later external review found folder-fence, search, size-limit, encoding, patch and installer defects, plus public listings that described features never built. All are fixed or removed in 1.1.0; see `CHANGELOG.md` and `tests/test_regressions.py`. The "Root `server.py` legacy stub" noted above was an unrestricted file server and has been deleted.

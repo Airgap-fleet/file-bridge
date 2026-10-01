@@ -2,8 +2,8 @@
 # See https://smithery.ai/docs/build for full schema
 
 name: airgap-file-bridge
-description: Local-first filesystem MCP bridge - secure, air-gapped, UK-sovereign
-version: 1.0.4
+description: Local stdio MCP server for one folder - read-only by default, folder-fenced, no network connections
+version: 1.1.0
 license: MIT
 
 # Command to start the server
@@ -18,9 +18,14 @@ configSchema:
   properties:
     FILE_BRIDGE_ROOT_PATH:
       type: string
-      title: Root Path
-      description: Root directory for file operations (absolute path)
+      title: Folder
+      description: The one folder the AI may use (absolute path)
       required: true
+    FILE_BRIDGE_READ_ONLY:
+      type: boolean
+      title: Read-only
+      description: Set to false to let the AI create and edit files (previous versions are kept)
+      default: true
     FILE_BRIDGE_MAX_FILE_SIZE:
       type: integer
       title: Max File Size (bytes)
@@ -43,51 +48,17 @@ configSchema:
       title: Log Level
       enum: [DEBUG, INFO, WARNING, ERROR]
       default: INFO
-    FILE_BRIDGE_TRANSPORT:
-      type: string
-      title: Transport
-      enum: [stdio, sse, http]
-      default: stdio
-    FILE_BRIDGE_HOST:
-      type: string
-      title: Host
-      default: 127.0.0.1
-    FILE_BRIDGE_PORT:
-      type: integer
-      title: Port
-      default: 8422
-    FILE_BRIDGE_WATCHDOG_POLLING:
-      type: boolean
-      title: Watchdog Polling
-      default: false
 
-# Metadata for Smithery
-repository:
-  url: https://github.com/Airgap-fleet/file-bridge
-  source: github
-
-# Keywords for discoverability
 keywords:
   - mcp
   - model-context-protocol
   - mcp-server
   - local-first
-  - air-gapped
   - filesystem
   - files
-  - uk-sovereign
+  - read-only
 
-# License
-license: MIT
-
-# Homepage
-homepage: https://pypi.org/project/airgap-file-bridge/
-
-# Repository
+homepage: https://airgapfleet.com
 repository: https://github.com/Airgap-fleet/file-bridge
-
-# Issues
 issues: https://github.com/Airgap-fleet/file-bridge/issues
-
-# Changelog
 changelog: https://github.com/Airgap-fleet/file-bridge/releases

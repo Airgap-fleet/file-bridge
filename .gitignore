@@ -52,3 +52,6 @@ Thumbs.db
 Anakin/
 Chat Logs/
 Chat_Logs/
+
+# The installer needs the lockfile
+!uv.lock

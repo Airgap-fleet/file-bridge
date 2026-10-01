@@ -28,6 +28,10 @@
 .PARAMETER Client
   claude_desktop | cursor | both | none
 
+.PARAMETER AllowWrites
+  Let the AI create and edit files in RootPath. Without this switch the bridge is
+  read-only. Previous versions are always kept under RootPath\.file-bridgeersions.
+
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File .\installer\Install-FileBridge.ps1 -RootPath "D:\Matters\SharedDocs"
 #>
@@ -44,7 +48,9 @@ param(
     [switch]$SkipSelfTest,
 
     [ValidateSet("claude_desktop", "cursor", "both", "none")]
-    [string]$Client = "both"
+    [string]$Client = "both",
+
+    [switch]$AllowWrites
 )
 
 Set-StrictMode -Version Latest
@@ -52,7 +58,7 @@ $ErrorActionPreference = "Stop"
 
 $ProductName = "File Bridge"
 $Publisher = "Airgap Fleet"
-$ProductVersion = "1.0.4"
+$ProductVersion = "1.1.0"
 $UninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\AirgapFleet-FileBridge"
 $SigningStatus = "UNSIGNED INTERNAL - no Authenticode certificate present on build machine"
 
@@ -70,6 +76,37 @@ function Write-Step {
     elseif ($Level -eq "PASS") { Write-Host $line -ForegroundColor Green }
     elseif ($Level -eq "WARN") { Write-Host $line -ForegroundColor Yellow }
     else { Write-Host $line }
+}
+
+function Read-JsonConfig {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return [pscustomobject]@{ mcpServers = [pscustomobject]@{} } }
+    # ReadAllText detects UTF-8 with or without a BOM (Get-Content in PowerShell 5.1 assumes ANSI).
+    $raw = [System.IO.File]::ReadAllText($Path)
+    if ([string]::IsNullOrWhiteSpace($raw)) { return [pscustomobject]@{ mcpServers = [pscustomobject]@{} } }
+    try { return ($raw | ConvertFrom-Json -ErrorAction Stop) }
+    catch {
+        Fail-Loud "Could not read $Path because it is not valid JSON. It was left unchanged. Fix or remove it and re-run, or re-run with -SkipClientConfig."
+    }
+}
+
+function Set-BridgeEntry {
+    param([string]$Path, $ServerObj)
+    $cfg = Read-JsonConfig $Path
+    if (-not ($cfg.PSObject.Properties.Name -contains "mcpServers") -or $null -eq $cfg.mcpServers) {
+        $cfg | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{}) -Force
+    }
+    $cfg.mcpServers | Add-Member -NotePropertyName "file-bridge" -NotePropertyValue $ServerObj -Force
+    $dir = Split-Path $Path -Parent
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+    if (Test-Path -LiteralPath $Path) {
+        $backup = "$Path.bak-" + (Get-Date -Format "yyyyMMdd-HHmmss")
+        Copy-Item -LiteralPath $Path -Destination $backup -Force
+        Write-Step "Backed up existing config to $backup" -Level PASS
+    }
+    $json = $cfg | ConvertTo-Json -Depth 32
+    # UTF-8 without a byte-order mark; Set-Content -Encoding utf8 in PowerShell 5.1 adds one.
+    [System.IO.File]::WriteAllText($Path, $json, (New-Object System.Text.UTF8Encoding($false)))
 }
 
 function Fail-Loud {
@@ -198,13 +235,12 @@ $launcherCmd = Join-Path $BinDir "file-bridge.cmd"
 @echo off
 REM File Bridge launcher - local stdio only; no network.
 set "VIRTUAL_ENV=$VenvDir"
-if defined FILE_BRIDGE_ROOT_PATH goto run
-if defined FILESYSTEM_MCP_ROOT_PATH set "FILE_BRIDGE_ROOT_PATH=%FILESYSTEM_MCP_ROOT_PATH%"
-:run
+if not defined FILE_BRIDGE_ROOT_PATH if defined FILESYSTEM_MCP_ROOT_PATH set "FILE_BRIDGE_ROOT_PATH=%FILESYSTEM_MCP_ROOT_PATH%"
+if not exist "$fbExe" goto fallback
 "$fbExe" %*
-if errorlevel 1 (
-  "$pythonExe" -m filesystem_mcp.server %*
-)
+exit /b
+:fallback
+"$pythonExe" -m filesystem_mcp.server %*
 "@ | Set-Content -Path $launcherCmd -Encoding ascii
 
 @"
@@ -233,48 +269,26 @@ if ($userPath -notlike "*$BinDir*") {
 
 if (-not $SkipClientConfig -and $Client -ne "none") {
     Write-Step "Writing MCP client config (local launcher; no uvx at runtime)..."
-    $envMap = @{ FILE_BRIDGE_ROOT_PATH = $RootPath; FILE_BRIDGE_TRANSPORT = "stdio" }
+    $readOnly = if ($AllowWrites) { "false" } else { "true" }
+    $envMap = [ordered]@{ FILE_BRIDGE_ROOT_PATH = $RootPath; FILE_BRIDGE_READ_ONLY = $readOnly }
     $command = $launcherCmd
+    $serverObj = [pscustomobject]@{
+        command = $command
+        args    = @()
+        env     = [pscustomobject]$envMap
+    }
     if ($Client -eq "claude_desktop" -or $Client -eq "both") {
         $cd = Join-Path $env:APPDATA "Claude\claude_desktop_config.json"
-        $existing = [pscustomobject]@{ mcpServers = [pscustomobject]@{} }
-        if (Test-Path $cd) {
-            try { $existing = Get-Content $cd -Raw | ConvertFrom-Json } catch { }
-        }
-        if (-not $existing.mcpServers) {
-            $existing | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{}) -Force
-        }
-        $serverObj = [pscustomobject]@{
-            command = $command
-            args    = @()
-            env     = [pscustomobject]$envMap
-        }
-        $existing.mcpServers | Add-Member -NotePropertyName "file-bridge" -NotePropertyValue $serverObj -Force
-        $cdDir = Split-Path $cd -Parent
-        if (-not (Test-Path $cdDir)) { New-Item -ItemType Directory -Force -Path $cdDir | Out-Null }
-        ($existing | ConvertTo-Json -Depth 8) | Set-Content -Path $cd -Encoding utf8
+        Set-BridgeEntry -Path $cd -ServerObj $serverObj
         Write-Step "Claude Desktop config updated: $cd" -Level PASS
     }
     if ($Client -eq "cursor" -or $Client -eq "both") {
         $cu = Join-Path $env:USERPROFILE ".cursor\mcp.json"
-        $existing = [pscustomobject]@{ mcpServers = [pscustomobject]@{} }
-        if (Test-Path $cu) {
-            try { $existing = Get-Content $cu -Raw | ConvertFrom-Json } catch { }
-        }
-        if (-not $existing.mcpServers) {
-            $existing | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{}) -Force
-        }
-        $serverObj = [pscustomobject]@{
-            command = $command
-            args    = @()
-            env     = [pscustomobject]$envMap
-        }
-        $existing.mcpServers | Add-Member -NotePropertyName "file-bridge" -NotePropertyValue $serverObj -Force
-        $cuDir = Split-Path $cu -Parent
-        if (-not (Test-Path $cuDir)) { New-Item -ItemType Directory -Force -Path $cuDir | Out-Null }
-        ($existing | ConvertTo-Json -Depth 8) | Set-Content -Path $cu -Encoding utf8
+        Set-BridgeEntry -Path $cu -ServerObj $serverObj
         Write-Step "Cursor config updated: $cu" -Level PASS
     }
+    $modeText = if ($AllowWrites) { "read and write (previous versions kept)" } else { "read-only" }
+    Write-Step "AI access mode: $modeText" -Level PASS
 } else {
     Write-Step "Skipped MCP client config" -Level WARN
 }

@@ -40,7 +40,6 @@ async def run_test(exe: str, python: str, root: Path) -> dict:
 
     env = os.environ.copy()
     env["FILE_BRIDGE_ROOT_PATH"] = str(root.resolve())
-    env["FILE_BRIDGE_TRANSPORT"] = "stdio"
     env["FILE_BRIDGE_LOG_LEVEL"] = "WARNING"
     # Reduce banner / update-nudge noise during air-gap demos
     env["FASTMCP_SHOW_SERVER_BANNER"] = "false"

@@ -2,7 +2,7 @@
 
 **For:** COLP, practice manager, and firm IT evaluating or installing File Bridge  
 **Product:** File Bridge (Airgap Fleet) - a local connector your AI desk uses to work with files and folders on this PC  
-**Version:** 1.0.4 (see `proof-pack\VERSION.txt`)  
+**Version:** 1.1.0 (see `proof-pack\VERSION.txt`)  
 **Build status:** UNSIGNED INTERNAL - no Authenticode certificate on this build yet. SmartScreen or firm policy may warn; treat as an internal / pilot artefact until a signed release is issued.
 
 This guide is plain English. Technical detail for developers lives in `README.md`.
@@ -11,7 +11,7 @@ This guide is plain English. Technical detail for developers lives in `README.md
 
 ## 1. What this is / who it is for
 
-File Bridge lets your AI desk (for example Claude Desktop or Cursor) **read, write, search, and manage files inside a folder you choose on your own computer** - privately.
+File Bridge lets your AI desk (for example Claude Desktop or Cursor) **read and search the files inside one folder you choose on your own computer**. It is read-only unless your firm switches writing on.
 
 In client terms: ask your AI assistant to work with documents, matter packs, or shared folders on this PC, without sending those files to a File Bridge vendor cloud. The bridge is a small local program that only talks to the AI desk on the same machine. It stays inside the root folder you configure (path traversal is blocked by design).
 
@@ -32,16 +32,19 @@ Staff sometimes paste client matter into consumer ChatGPT or similar tools. Priv
 
 ---
 
-## 2. What never leaves your PC
+## 2. What the bridge sends, and what it doesn't
 
-When File Bridge runs in its default local mode:
+**Read this first:** when your AI desk reads a file through File Bridge, the AI desk sends that file's text to its own AI provider (for example Anthropic or OpenAI) under that provider's terms. File Bridge decides *which* files the AI can reach. It does not hide what is inside them.
 
-- Files are read and written **only under the root folder path you configure**.
+What File Bridge itself does:
+
+- Files are read (and, only if you allow it, written) **only inside the root folder you configure**. Folder shortcuts that lead elsewhere are ignored.
+- It is **read-only by default**. If you allow writing, the previous version of every changed file is kept in a `.file-bridge\versions` folder that the AI cannot change.
 - The bridge talks to your AI desk over a **local process connection** (stdio JSON-RPC; it does not open a network listening port in the air-gap demo path).
 - There is **no telemetry channel**, no vendor cloud sync of file content, and no model API call made by the bridge itself.
 - Logs stay on the local machine (shown in the local process output).
 
-**Honest boundary:** your AI desk application (Claude Desktop, Cursor, and similar) is a **separate product** with its own network behaviour. This guide and the proof pack show that the **File Bridge process** does not open outbound connections while handling file operations. They do not certify third-party AI clients.
+**Boundary:** your AI desk application (Claude Desktop, Cursor, and similar) is a **separate product** with its own network behaviour. This guide and the proof pack show that the **File Bridge process** does not open outbound connections while handling file operations. They do not certify third-party AI clients.
 
 **Setup vs day-to-day use:** the installer may use the internet **during setup only** (to fetch tools and locked packages). Once installed, day-to-day file work through the bridge does not require or perform outbound network use for file content.
 
@@ -58,6 +61,7 @@ We do **not** claim ISO 27001, SOC 2, Cyber Essentials, Lexcel, or similar certi
 - The proof pack is **evidence for your auditor and firm controls**, not a certificate or accreditation mark.
 - We do **not** certify the network behaviour of Claude Desktop, Cursor, or other AI desks.
 - Setup may use the internet **once** for prerequisites; day-to-day bridge use does not phone home with matter content.
+- We do **not** claim that files the AI reads stay on your PC. They go to your AI provider.
 
 ## 3. System requirements
 
@@ -96,7 +100,7 @@ powershell -ExecutionPolicy Bypass -File .\installer\Install-FileBridge.ps1 -Roo
    - Ensures setup tools are available (may download during setup only)
    - Installs into `%LOCALAPPDATA%\AirgapFleet\file-bridge`
    - Registers uninstall (Add/Remove Programs as "File Bridge (Airgap Fleet)")
-   - Optionally writes local AI-desk connector settings
+   - Optionally writes local AI-desk connector settings (it backs up the existing settings file first)
    - Runs a built-in self-test and **stops with a clear error** if anything fails
 
 **Firm IT - silent / unattended:**
@@ -105,7 +109,7 @@ powershell -ExecutionPolicy Bypass -File .\installer\Install-FileBridge.ps1 -Roo
 powershell -ExecutionPolicy Bypass -File .\installer\Install-FileBridge.ps1 -RootPath "C:\Path\To\Your\Files" -Quiet
 ```
 
-**Optional switches** (see `installer\README.md`): `-SkipClientConfig`, `-SkipSelfTest` (not recommended), `-Client claude_desktop|cursor|both|none`.
+**Optional switches** (see `installer\README.md`): `-AllowWrites` (let the AI create and edit files; otherwise read-only), `-SkipClientConfig`, `-SkipSelfTest` (not recommended), `-Client claude_desktop|cursor|both|none`.
 
 **Typical timing:** first install on a clean laptop often lands in the **10-20 minute** range depending on download speed for setup prerequisites; the target is **under 15 minutes** when the machine is ready, and **must stay under 30**.
 
@@ -154,7 +158,7 @@ powershell -ExecutionPolicy Bypass -File .\installer\Uninstall-FileBridge.ps1
 
 Or: **Settings > Apps > File Bridge (Airgap Fleet)**.
 
-Uninstall removes the per-user install directory and Add/Remove entry. AI-desk connector entries (if any) are left in place so you can remove them manually from Claude Desktop / Cursor settings if desired. Your documents and folders are never deleted by uninstall.
+Uninstall removes the per-user install directory, the Add/Remove entry and the File Bridge connector entries in Claude Desktop and Cursor (backing those settings files up first). Your documents and folders are never deleted by uninstall.
 
 ---
 
