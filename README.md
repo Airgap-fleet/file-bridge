@@ -4,6 +4,8 @@ A small local MCP server that lets an AI assistant (Claude Desktop, Cursor, VS C
 
 **What it does not do:** when your AI assistant reads a file through the bridge, the assistant sends that text to its own provider (Anthropic, OpenAI, …) under that provider's terms. File Bridge controls *which* files the assistant can reach; it does not hide their contents from the assistant.
 
+**Need client details kept away from the AI?** [Airgap Private Desk](https://airgapfleet.com) is our Windows app built on this bridge: it replaces names, addresses and account numbers with placeholders before the AI sees a document, and fills them back in on your PC when the AI saves a draft.
+
 **Build status:** UNSIGNED INTERNAL (no Authenticode certificate yet). See `proof-pack/SIGNING.md`.
 
 Client / COLP install guide (plain English): `CLIENT-README.md`.
