@@ -69,5 +69,5 @@ If both passes succeed with matching "no outbound" evidence, the proof pack demo
 ## What this does *not* prove
 
 - Behaviour of Claude Desktop / Cursor / other AI clients (separate products).
-- Behaviour of optional HTTP/SSE transport modes (not the default; do not use for air-gap demos).
+- What the AI desk sends to its provider. Text the AI reads through the bridge goes to the AI provider.
 - Future update mechanisms (must remain customer-controlled; see KNOWN-LIMITATIONS.md).

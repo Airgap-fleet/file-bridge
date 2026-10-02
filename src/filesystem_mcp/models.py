@@ -26,6 +26,11 @@ def _apply_legacy_env_prefix() -> None:
 
 _apply_legacy_env_prefix()
 
+# Folder inside the root that holds bridge-managed data (backups). The AI can
+# read it but never write to it, and listings/searches skip it.
+BRIDGE_DATA_DIR = ".file-bridge"
+
+
 class FilesystemConfig(BaseSettings):
     """Configuration for the Filesystem MCP Server."""
 
@@ -41,11 +46,11 @@ class FilesystemConfig(BaseSettings):
         _apply_legacy_env_prefix()
         super().__init__(**data)
 
-
-    root_path: Path = Field(
-        default=Path.cwd(),
+    root_path: Path | None = Field(
+        default=None,
         description=(
-            "Root directory for all filesystem operations. All paths are resolved relative to this."
+            "Root directory for all filesystem operations. Required: the bridge refuses "
+            "to start without it."
         ),
     )
     max_file_size: int = Field(
@@ -57,7 +62,8 @@ class FilesystemConfig(BaseSettings):
     follow_symlinks: bool = Field(
         default=False,
         description=(
-            "Whether to follow symlinks. When false, symlinks are treated as regular files."
+            "Whether paths may pass through symlinks. Even when true, a link may never "
+            "lead outside root_path."
         ),
     )
     allow_absolute_paths: bool = Field(
@@ -71,11 +77,32 @@ class FilesystemConfig(BaseSettings):
         default="utf-8",
         description="Default text encoding for read/write operations.",
     )
+    read_only: bool = Field(
+        default=True,
+        description="When true (the default), write_file and patch_file are refused.",
+    )
+    backup_on_write: bool = Field(
+        default=True,
+        description=(
+            f"Keep a timestamped copy under {BRIDGE_DATA_DIR}/versions before a file is "
+            "overwritten or patched."
+        ),
+    )
+    allow_broad_root: bool = Field(
+        default=False,
+        description="Allow a drive root or the user's home folder as root_path (not advised).",
+    )
+    log_level: str = Field(
+        default="INFO",
+        description="Log level: DEBUG, INFO, WARNING or ERROR. Logs go to stderr.",
+    )
 
     @field_validator("root_path", mode="before")
     @classmethod
-    def resolve_root_path(cls, v: str | Path) -> Path:
+    def resolve_root_path(cls, v: str | Path | None) -> Path | None:
         """Resolve the root path to absolute."""
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
         return Path(v).expanduser().resolve()
 
 
@@ -90,7 +117,10 @@ class ReadFileRequest(BaseModel):
     max_size: int | None = Field(
         default=None,
         ge=1,
-        description="Override max file size for this read operation.",
+        description=(
+            "Lower the size limit for this read. Cannot raise it above the configured "
+            "maximum."
+        ),
     )
 
 
@@ -129,6 +159,9 @@ class WriteFileResponse(BaseModel):
     path: str = Field(description="The path that was written.")
     size: int = Field(description="Number of bytes written.")
     encoding: str = Field(description="Encoding used to write the file.")
+    backup: str | None = Field(
+        default=None, description="Where the previous version was saved, relative to root."
+    )
 
 
 class ListDirRequest(BaseModel):
@@ -137,7 +170,7 @@ class ListDirRequest(BaseModel):
     path: str = Field(default=".", description="Directory path to list, relative to root.")
     glob_pattern: str | None = Field(
         default=None,
-        description="Optional glob pattern to filter entries (e.g., '*.py').",
+        description="Optional glob pattern to filter entries by name (e.g., '*.py').",
     )
     recursive: bool = Field(
         default=False,
@@ -151,7 +184,10 @@ class ListDirRequest(BaseModel):
         default=None,
         ge=1,
         le=100,
-        description="Maximum recursion depth when recursive=True.",
+        description=(
+            "When recursive=True, how many folder levels to return. 1 = only this "
+            "folder's contents, 2 = also the contents of its subfolders, and so on."
+        ),
     )
 
 
@@ -162,7 +198,7 @@ class DirEntry(BaseModel):
     path: str = Field(description="Full path relative to root.")
     is_dir: bool = Field(description="Whether this is a directory.")
     is_file: bool = Field(description="Whether this is a regular file.")
-    is_symlink: bool = Field(description="Whether this is a symlink.")
+    is_symlink: bool = Field(description="Whether this is a symlink or junction.")
     size: int | None = Field(default=None, description="File size in bytes (None for dirs).")
     modified: float | None = Field(
         default=None, description="Last modified timestamp (Unix epoch)."
@@ -181,7 +217,9 @@ class SearchFilesRequest(BaseModel):
     """Request model for search_files tool."""
 
     pattern: str = Field(description="Search pattern (ripgrep-compatible regex).")
-    path: str = Field(default=".", description="Directory to search in, relative to root.")
+    path: str = Field(
+        default=".", description="Directory or file to search in, relative to root."
+    )
     glob_pattern: str | None = Field(
         default=None,
         description="Optional glob pattern to filter files (e.g., '*.py').",
@@ -189,6 +227,10 @@ class SearchFilesRequest(BaseModel):
     case_sensitive: bool = Field(
         default=True,
         description="Whether the search is case-sensitive.",
+    )
+    fixed_strings: bool = Field(
+        default=False,
+        description="Treat the pattern as plain text instead of a regular expression.",
     )
     max_results: int = Field(
         default=100,
@@ -209,8 +251,10 @@ class SearchMatch(BaseModel):
 
     file: str = Field(description="Path to the file containing the match, relative to root.")
     line: int = Field(description="Line number of the match (1-indexed).")
-    column: int | None = Field(default=None, description="Column number of the match (1-indexed).")
-    match: str = Field(description="The matched text.")
+    column: int | None = Field(
+        default=None, description="Byte column of the first match on the line (1-indexed)."
+    )
+    match: str = Field(description="The matched line.")
     context_before: list[str] = Field(default_factory=list, description="Lines before the match.")
     context_after: list[str] = Field(default_factory=list, description="Lines after the match.")
 
@@ -221,8 +265,11 @@ class SearchFilesResponse(BaseModel):
     pattern: str = Field(description="The search pattern used.")
     path: str = Field(description="The directory that was searched.")
     matches: list[SearchMatch] = Field(description="List of matches found.")
-    total: int = Field(description="Total number of matches found.")
-    truncated: bool = Field(description="Whether results were truncated due to max_results.")
+    total: int = Field(description="Number of matches returned.")
+    truncated: bool = Field(description="Whether more matches exist beyond max_results.")
+    warnings: list[str] = Field(
+        default_factory=list, description="Files that could not be searched, if any."
+    )
 
 
 class GlobRequest(BaseModel):
@@ -252,8 +299,8 @@ class GlobResponse(BaseModel):
     pattern: str = Field(description="The glob pattern used.")
     path: str = Field(description="The directory that was searched.")
     matches: list[str] = Field(description="List of matching paths relative to root.")
-    total: int = Field(description="Total number of matches found.")
-    truncated: bool = Field(description="Whether results were truncated due to max_results.")
+    total: int = Field(description="Number of matches returned.")
+    truncated: bool = Field(description="Whether more matches exist beyond max_results.")
 
 
 class PatchFileRequest(BaseModel):
@@ -262,6 +309,14 @@ class PatchFileRequest(BaseModel):
     path: str = Field(description="Path to the file to patch, relative to root.")
     old_str: str = Field(description="The exact string to find and replace.")
     new_str: str = Field(description="The string to replace it with.")
+    expected_replacements: int | None = Field(
+        default=1,
+        ge=1,
+        description=(
+            "How many times old_str must appear. The patch is refused if the count "
+            "differs. Use null to replace every occurrence."
+        ),
+    )
     encoding: str | None = Field(
         default=None,
         description="Text encoding to use. Defaults to config default_encoding.",
@@ -275,6 +330,9 @@ class PatchFileResponse(BaseModel):
     replacements: int = Field(description="Number of replacements made.")
     old_size: int = Field(description="File size before patch in bytes.")
     new_size: int = Field(description="File size after patch in bytes.")
+    backup: str | None = Field(
+        default=None, description="Where the previous version was saved, relative to root."
+    )
 
 
 class ErrorResponse(BaseModel):

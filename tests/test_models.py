@@ -12,10 +12,15 @@ from filesystem_mcp.models import FilesystemConfig
 class TestFilesystemConfig:
     """Tests for FilesystemConfig."""
 
-    def test_default_config(self):
+    def test_default_config(self, monkeypatch):
         """Test default configuration values."""
+        for key in list(__import__("os").environ):
+            if key.startswith(("FILE_BRIDGE_", "FILESYSTEM_MCP_")):
+                monkeypatch.delenv(key, raising=False)
         config = FilesystemConfig()
-        assert config.root_path == Path.cwd()
+        assert config.root_path is None
+        assert config.read_only is True
+        assert config.backup_on_write is True
         assert config.max_file_size == 10 * 1024 * 1024
         assert config.follow_symlinks is False
         assert config.allow_absolute_paths is False

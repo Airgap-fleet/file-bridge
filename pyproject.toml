@@ -1,11 +1,11 @@
 [project]
 name = "airgap-file-bridge"
-version = "1.0.4"
-description = "Bridge your AI assistant to local files — read, write, search, and manage files securely without cloud dependencies"
+version = "1.1.0"
+description = "Local MCP server that lets an AI assistant read, search and (optionally) edit files inside one folder you choose"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
-authors = [{name = "Airgap Fleet", email = "fleet@airgap.io"}]
+authors = [{name = "Airgap Fleet"}]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -16,12 +16,17 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
+    "anyio>=4.0",
     "fastmcp>=3.4,<4.0",
     "pydantic>=2.10",
     "pydantic-settings>=2.6",
     "structlog>=25.1",
-    "watchdog>=4.0",
 ]
+
+[project.urls]
+Homepage = "https://airgapfleet.com"
+Repository = "https://github.com/Airgap-fleet/file-bridge"
+Issues = "https://github.com/Airgap-fleet/file-bridge/issues"
 
 [project.scripts]
 airgap-file-bridge = "filesystem_mcp.server:main"

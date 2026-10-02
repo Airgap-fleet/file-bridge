@@ -6,16 +6,18 @@
 **Product:** File Bridge (local file connector for your AI desk)  
 **Build status:** **UNSIGNED INTERNAL** - Authenticode certificate not yet applied. Do not treat this as a prospect-ready signed release.
 
-## What never leaves your PC
+## What the bridge sends, and what it doesn't
 
-When File Bridge is running in its default **stdio** mode:
+When the AI desk reads a file through File Bridge, **the AI desk sends that text to its own AI provider** (for example Anthropic or OpenAI). This pack does not cover that, and nothing in it should be read as saying file contents stay on the PC.
 
-- Files are read and written **only on the local disk path you configure**.
+What this pack demonstrates about the **bridge process** itself:
+
+- Files are read (and, only if writing is switched on, written) **only inside the folder you configure**. It is read-only by default.
 - The bridge talks to your AI desk over a **local process pipe** (no listening network port).
 - There is **no telemetry channel**, no vendor cloud sync of file content, and no model API call made by the bridge itself.
 - Logs go to **stderr on the local machine** only.
 
-Honest boundary: the **AI desk application** you attach (e.g. Claude Desktop, Cursor) is a separate product with its own network behaviour. This proof pack demonstrates the **bridge process** does not open outbound connections while handling file queries. It does not certify third-party AI clients.
+Boundary: the **AI desk application** you attach (e.g. Claude Desktop, Cursor) is a separate product with its own network behaviour. This proof pack demonstrates the **bridge process** does not open outbound connections while handling file queries. It does not certify third-party AI clients.
 
 ## Contents of this folder
 

@@ -41,6 +41,7 @@ class TestMCPServerIntegration:
             follow_symlinks=False,
             allow_absolute_paths=False,
             default_encoding="utf-8",
+            read_only=False,
         )
         return FilesystemCore(config)
 
@@ -138,7 +139,12 @@ class TestMCPServerIntegration:
         test_file.write_text("Hello world\nHello again")
 
         response = await patch_file(
-            PatchFileRequest(path="integration_patch.txt", old_str="Hello", new_str="Hi")
+            PatchFileRequest(
+                path="integration_patch.txt",
+                old_str="Hello",
+                new_str="Hi",
+                expected_replacements=2,
+            )
         )
 
         assert response.path == "integration_patch.txt"

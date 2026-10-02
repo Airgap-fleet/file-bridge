@@ -2,19 +2,19 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.airgap-fleet/airgap-file-bridge",
   "title": "airgap-file-bridge",
-  "description": "Local-first filesystem MCP bridge with ripgrep search, atomic writes, symlink protection, binary detection, size limits, and multiple transports (stdio/SSE/HTTP). Zero data egress, air-gapped ready.",
+  "description": "Local stdio MCP server that lets an AI assistant read and search files inside one folder you choose. Read-only by default; optional editing keeps previous versions. Folder links cannot lead outside the folder. The bridge makes no network connections.",
   "repository": {
     "url": "https://github.com/Airgap-fleet/file-bridge",
     "source": "github",
     "id": "airgap-fleet-file-bridge"
   },
-  "version": "1.0.4",
+  "version": "1.1.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "airgap-file-bridge",
-      "version": "1.0.4",
+      "version": "1.1.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
@@ -22,8 +22,14 @@
       "environmentVariables": [
         {
           "name": "FILE_BRIDGE_ROOT_PATH",
-          "description": "Root directory for file operations (absolute path)",
+          "description": "The one folder the AI may use (absolute path). Required.",
           "required": true
+        },
+        {
+          "name": "FILE_BRIDGE_READ_ONLY",
+          "description": "Set to false to let the AI create and edit files. Previous versions are kept in .file-bridge/versions.",
+          "required": false,
+          "default": "true"
         },
         {
           "name": "FILE_BRIDGE_MAX_FILE_SIZE",
@@ -33,7 +39,7 @@
         },
         {
           "name": "FILE_BRIDGE_LOG_LEVEL",
-          "description": "Log level",
+          "description": "Log level (logs go to stderr)",
           "required": false,
           "default": "INFO",
           "enum": ["DEBUG", "INFO", "WARNING", "ERROR"]
@@ -41,6 +47,6 @@
       ]
     }
   ],
-  "keywords": ["mcp", "filesystem", "files", "local-first", "air-gapped", "ripgrep", "stateless"],
+  "keywords": ["mcp", "filesystem", "files", "local-first", "read-only", "ripgrep"],
   "license": "MIT"
 }
